@@ -1,9 +1,10 @@
-import java.io.*;
-import java.util.*;
+import java.io.*; //Импорт классов для ввода/вывода (BufferedWriter, FileWriter, File)
+import java.util.*; //Импорт класса Scanner для чтения из файла
+
 
 public class Main {
     private static final double EPSILON = 1e-5; //Константа для точности вычислений
-    private static final int PRECISION = (int) Math.abs(Math.log10(EPSILON));; //Количество знаков после запятой в выводе
+    private static final int PRECISION = (int) Math.abs(Math.log10(EPSILON)); //Количество знаков после запятой в выводе
 
     //Класс для хранения результата работы
     public static class Result {
@@ -12,6 +13,7 @@ public class Main {
         public double determinant;      //Определитель
         public double[] residuals; //Вектор невязок
 
+        //Конструктор класса Result, инициализирует все поля
         public Result(double[] solution, double[][] inverseMatrix, double determinant, double[] residuals) {
             this.solution = solution;
             this.determinant = determinant;
@@ -27,37 +29,41 @@ public class Main {
 
             //Считывание матрицы из файла
             File inputFile = new File("input.txt");
+            //Создание Scanner для чтения из файла
             Scanner scanner = new Scanner(inputFile);
             int n = scanner.nextInt(); //Читаем размерность матрицы
-            A = new double[n][n];
-            b = new double[n];
+            A = new double[n][n]; //Выделение памяти под матрицу n×n
+            b = new double[n]; //Выделение памяти под вектор правой части длины n
 
             //Заполняем матрицу A и вектор b
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    A[i][j] = scanner.nextDouble();
+                    A[i][j] = scanner.nextDouble(); //Чтение элемента матрицы из файла
                 }
-                b[i] = scanner.nextDouble();
+                b[i] = scanner.nextDouble(); //Чтение соответствующего элемента правой части
             }
-            scanner.close();
+            scanner.close(); //Закрытие Scanner, освобождение ресурсов
 
             //Решение системы методом Гаусса с выбором главного элемента
             Result res = gaussianElimination(A, b);
 
             //Запись и вывод результата
             BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt"));
+            //Проверка, является ли определитель NaN (сигнал о вырожденной матрице)
             if (Double.isNaN(res.determinant)) {
                 writer.write("Матрица системы вырожденная. Решение невозможно.\n");
                 System.out.println("Матрица системы вырожденная. Решение невозможно.");
-            } else {
+            } else { //Если матрица невырожденная
                 writer.write("Решение системы:\n");
                 System.out.println("Решение системы:");
+                //Цикл по компонентам вектора решения
                 for (double x : res.solution) {
                     writer.write(String.format("%." + PRECISION + "f\n", x));
                     System.out.println(String.format("%." + PRECISION + "f", x));
                 }
                 writer.write("\nНевязки:\n");
                 System.out.println("\nНевязки:");
+                //Цикл по компонентам вектора невязок
                 for (double r : res.residuals) {
                     writer.write(String.format("%." + PRECISION + "f\n", r));
                     System.out.println(String.format("%." + PRECISION + "f", r));
@@ -66,12 +72,16 @@ public class Main {
                 System.out.println("\nОпределитель: " + String.format("%." + PRECISION + "f", res.determinant));
                 writer.write("\nОбратная матрица:\n");
                 System.out.println("\nОбратная матрица:");
+                //Цикл по строкам обратной матрицы
                 for (double[] row : res.inverseMatrix) {
+                    //Цикл по элементам текущей строки
                     for (double value : row) {
                         writer.write(String.format("%." + PRECISION + "f ", value));
                         System.out.print(String.format("%." + PRECISION + "f ", value));
                     }
+                    //Перевод строки в файле после завершения строки матрицы
                     writer.write("\n");
+                    //Перевод строки в консоли
                     System.out.println();
                 }
             }
@@ -81,18 +91,19 @@ public class Main {
         }
     }
 
+    //Метод, реализующий метод Гаусса с выбором главного элемента по столбцу
     public static Result gaussianElimination(double[][] A, double[] b) {
-        int n = A.length;
+        int n = A.length; //Получение размерности системы из размера матрицы A
         double[][] identityMatrix = new double[n][n]; //Единичная матрица (E)
         for (int i = 0; i < n; i++) {
             identityMatrix[i][i] = 1; //Ставим 1 по главной диагонали в единичной матрице
         }
-        int swapCount = 0; //Количество перестановок строк
+        int swapCount = 0; //Количество перестановок строк (влияет на знак определителя)
 
-        double det = 1.0; //Определитель
-        double[] solution = new double[n];
-        double[][] inverseMatrix = new double[n][n];
-        double[] residuals = new double[n];
+        double det = 1.0; //Переменная для накопления определителя
+        double[] solution = new double[n]; //Массив для хранения решения системы
+        double[][] inverseMatrix = new double[n][n]; //Массив для хранения обратной матрицы
+        double[] residuals = new double[n]; //Массив для хранения невязок
 
         double[][] oldA = new double[n][n]; //Матрица для хранения старых коэффициентов, чтобы посчитать невязки
         for (int i = 0; i < n; i++) System.arraycopy(A[i], 0, oldA[i], 0, n); //Скопируем все элементы
@@ -102,20 +113,21 @@ public class Main {
 
         //Прямой ход метода Гаусса с выбором главного элемента
         for (int i = 0; i < n; i++) {
-            //Выбор строки с наибольшим (главным) элементом
+            //Выбор строки с максимальным по модулю элементом в текущем столбце i
             int maxRow = i;
             for (int k = i + 1; k < n; k++) {
                 if (Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) {
-                    maxRow = k;
+                    maxRow = k; //Обновление индекса строки с максимальным элементом
                 }
             }
 
-            //Проверка на вырожденность матрицы
+            //Проверка на вырожденность: если главный элемент близок к нулю
             if (Math.abs(A[maxRow][i]) < EPSILON) {
+                //Возврат результата с определителем NaN, остальные поля null
                 return new Result(null, null, Double.NaN, null);
             }
 
-            //Перестановка строк, если необходимо
+            //Если строка с максимальным элементом не текущая, выполняем перестановку
             if (i != maxRow) {
                 //Перестановка в главной матрице
                 double[] temp = A[i];
@@ -132,7 +144,7 @@ public class Main {
                 b[i] = b[maxRow];
                 b[maxRow] = t;
 
-                swapCount++;
+                swapCount++; //Увеличение числа перестановок
             }
 
             //Считаем определитель (произведение элементов на главной диагонали)
@@ -141,7 +153,7 @@ public class Main {
             //Преобразуем последующие строки
             for (int k = i + 1; k < n; k++) {
                 double factor = A[k][i] / A[i][i];
-                //Для A нужно обновлять элементы от i до n, так как ранее элементы до i уже обнулились.
+                //Для A нужно обновлять элементы от i до n, так как ранее элементы до i уже обнулились
                 for (int j = i; j < n; j++) {
                     A[k][j] -= A[i][j] * factor;
                 }
@@ -190,7 +202,7 @@ public class Main {
         for (int i = 0; i < n; i++) {
             double sum = 0;
             for (int j = 0; j < n; j++) {
-                sum += oldA[i][j] * solution[j];
+                sum += oldA[i][j] * solution[j]; //Умножение строки на столбец
             }
             residuals[i] = Math.abs(sum - oldB[i]); //Используем старые коэффициенты
         }
