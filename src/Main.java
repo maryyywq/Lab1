@@ -115,7 +115,7 @@ public class Main {
         for (int i = 0; i < n; i++) {
             //Выбор строки с максимальным по модулю элементом в текущем столбце i
             int maxRow = i;
-            for (int k = i + 1; k < n; k++) {
+            for (int k = i + 1; k < n; k++) { //Перебор элементов в i-столбце
                 if (Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) {
                     maxRow = k; //Обновление индекса строки с максимальным элементом
                 }
@@ -152,10 +152,10 @@ public class Main {
 
             //Преобразуем последующие строки
             for (int k = i + 1; k < n; k++) {
-                double factor = A[k][i] / A[i][i];
+                double factor = A[k][i] / A[i][i]; //Вычисления множителя для обнуления элемента под главной диагональю
                 //Для A нужно обновлять элементы от i до n, так как ранее элементы до i уже обнулились
                 for (int j = i; j < n; j++) {
-                    A[k][j] -= A[i][j] * factor;
+                    A[k][j] -= A[i][j] * factor; //Вычитание строки
                 }
                 //Для identityMatrix обновляем всю строку (j от 0 до n)
                 for (int j = 0; j < n; j++) {
@@ -202,7 +202,7 @@ public class Main {
         for (int i = 0; i < n; i++) {
             double sum = 0;
             for (int j = 0; j < n; j++) {
-                sum += oldA[i][j] * solution[j]; //Умножение строки на столбец
+                sum += oldA[i][j] * solution[j]; //Умножение строки на столбец (вычисление A*x)
             }
             residuals[i] = Math.abs(sum - oldB[i]); //Используем старые коэффициенты
         }
